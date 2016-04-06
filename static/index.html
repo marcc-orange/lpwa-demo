@@ -20,7 +20,7 @@
 			<div class="panel-heading">
 				<h3 class="panel-title">Commands (downlink)</h3>
 			</div>
-			<div class="panel-body">
+			<div class="panel-body text-center">
 				<button id="light-on" class="btn btn-success" disabled="true">Light ON</button>
 				<button id="light-off" class="btn btn-danger" disabled="true">Light OFF</button>
 				<button id="light-blink" class="btn btn-warning" disabled="true">Light BLINK</button>
@@ -28,24 +28,31 @@
 			</div>
 		</div>
 
-		<div class="panel panel-primary">
-			<div class="panel-heading">
-				<h3 class="panel-title">Log (uplink)</h3>
-			</div>
-			<div class="panel-body">
-				<div id="echo-content">
-				</div>
-			</div>
-		</div>
+		<div class="row">
+			<div class="col-md-6">
 
-		<div class="panel panel-info">
-			<div class="panel-heading">
-				<h3 class="panel-title">Console (websocket)</h3>
+				<div class="panel panel-primary">
+					<div class="panel-heading">
+						<h3 class="panel-title">Log (uplink)</h3>
+					</div>
+					<div class="panel-body">
+						<div id="echo-content" style="height: 150px; overflow: scroll">
+						</div>
+					</div>
+				</div>
+
 			</div>
-			<div class="panel-body">
-				<details open="false">
-					<div id="console"/>
-				</details>
+			<div class="col-md-6">
+
+				<div class="panel panel-info">
+					<div class="panel-heading">
+						<h3 class="panel-title">Console (websocket)</h3>
+					</div>
+					<div class="panel-body">
+						<div id="console" style="height: 150px; overflow: scroll"/>
+					</div>
+				</div>
+
 			</div>
 		</div>
 
