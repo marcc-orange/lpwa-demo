@@ -3,7 +3,6 @@ STATIC_FILES=$(wildcard static/*)
 BUILD_STATIC_FILES=$(patsubst static/%, build/static/%, $(STATIC_FILES))
 SERVER=http://localhost:8080
 
-
 # Deploy using a git push
 deploy: build/demo $(BUILD_STATIC_FILES)
 	cd build && git commit -a --amend -m "deploy app" && git push -f origin master
@@ -12,7 +11,7 @@ deploy: build/demo $(BUILD_STATIC_FILES)
 build/demo: $(GO_SRC)
 	mkdir -p build
 	env GOOS=linux GOARCH=386 go build
-	mv demo build/demo
+	mv lpwa-demo build/demo
 
 # Copy static resources to build/
 build/static/%: static/%
@@ -21,4 +20,4 @@ build/static/%: static/%
 
 # Simulate a push from datavenue
 push:
-	curl -X POST -d @example/sample.json $(SERVER)/push
+	curl -X POST -d @example/sample.json $(SERVER)/demo/push
