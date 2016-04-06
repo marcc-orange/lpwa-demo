@@ -1,0 +1,7 @@
+Arduino
+Copyright(C) Arduino LLC
+Arduino is distributed under the terms and conditions of the 'LGPL' license
+
+LoRaWAN© go package - https://github.com/brocaar/lorawan
+Copyright (c) 2015 Orne Brocaar
+The MIT License
