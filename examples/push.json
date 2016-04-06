@@ -1,0 +1,23 @@
+{
+  "datasourceId": "5f356ab3f6404ddb9478b66d46f4680c",
+  "streamId": "a3f0e5e6443649518a379987c2ee1209",
+  "values": [
+    {
+      "id": "9b62ddfd4e044f9892692fa96ae0d781",
+      "value": "6df4a23148",
+      "location": null,
+      "metadata": {
+        "port": 2,
+        "fcnt": 1,
+        "rssi": -51,
+        "snr": 10,
+        "sf_used": "sf7"
+      },
+      "at": "2016-03-24T14:56:10.911Z"
+    }
+  ],
+  "link": {
+    "href": "/datasources/5f356ab3f6404ddb9478b66d46f4680c/streams/a3f0e5e6443649518a379987c2ee1209/values",
+    "rel": "/values"
+  }
+}
