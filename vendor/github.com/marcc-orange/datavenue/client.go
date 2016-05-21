@@ -44,6 +44,35 @@ func (c *Client) RetreiveStream(datasourceID, streamID string) (*Stream, error) 
 	return stream, nil
 }
 
+func (c *Client) RetreiveValues(datasourceID, streamID string) ([]*Value, error) {
+	URL := c.URL + "/datasources/" + datasourceID + "/streams/" + streamID + "/values"
+
+	req, err := http.NewRequest("GET", URL, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("X-ISS-Key", c.ISSKey)
+	req.Header.Add("X-OAPI-Key", c.OAPIKey)
+
+	response, err := c.Client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != 200 {
+		return nil, errors.New("bad response: " + response.Status)
+	}
+
+	var values []*Value
+	err = json.NewDecoder(response.Body).Decode(&values)
+	if err != nil {
+		return nil, err
+	}
+
+	return values, nil
+}
+
 func (c *Client) AppendValues(datasourceID, streamID string, values []*Value) error {
 	URL := c.URL + "/datasources/" + datasourceID + "/streams/" + streamID + "/values"
 
