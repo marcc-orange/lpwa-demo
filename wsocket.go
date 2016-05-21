@@ -8,8 +8,15 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// NotificationMessage is sent to browser on each datavenue push
+// NotificationMessage is sent to browser
 type NotificationMessage struct {
+	Type         string               `json:"type"`
+	Device       *DeviceMessage       `json:"device,omitempty"`
+	CommandState *CommandStateMessage `json:"command,omitempty"`
+}
+
+// DeviceMessage is sent to browser when a device has sent data
+type DeviceMessage struct {
 	LightOn    bool   `json:"lightOn"`
 	Luminosity uint32 `json:"luminosity"`
 }
@@ -17,6 +24,12 @@ type NotificationMessage struct {
 // CommandMessage is sent from browser for each command
 type CommandMessage struct {
 	Light string `json:"light"`
+}
+
+// CommandStateMessage is sent to browser when a command state is updated
+type CommandStateMessage struct {
+	FCnt  uint16 `json:"fCnt"`
+	State string `json:"state"`
 }
 
 // CommandHandler defines a func accepting a CommandMessage

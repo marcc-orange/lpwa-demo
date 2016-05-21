@@ -1,10 +1,47 @@
 // JQuery ;)
 var $ = function(a) { return document.getElementById(a); }
 
+var chartCtx = $('chart');
 var buttonOn = $('light-on');
 var buttonOff = $('light-off');
 var buttonBlink = $('light-blink');
-var contentMessage = $('echo-content');
+var deviceLog = $('device-log');
+var commandLog = $('command-log');
+
+// Chart setup
+var labels = [];
+var luminosityValues = [];
+var lightValues = [];
+var chartData = {
+    labels:labels,
+    datasets: [
+        {
+            label: "Luminosity",
+            scaleBeginAtZero: true,
+            borderColor: "rgba(179,181,198,1)",
+            data: luminosityValues
+        },
+        {
+            label: "Light state",
+            scaleBeginAtZero: true,
+            borderColor: "rgba(255,99,132,1)",
+            lineTension: 0,
+            data: lightValues
+        }
+    ]
+};
+var options = {
+    responsive: true,
+    maintainAspectRatio: true,
+    scales: {
+        yAxes: [{
+            ticks: {
+                beginAtZero:true
+            }
+        }]
+    }
+}
+var chart = Chart.Line(chartCtx, {data: chartData, options: options });
 
 var WebsocketClass = function(host){
     this.socket = new WebSocket(host);
@@ -23,11 +60,23 @@ WebsocketClass.prototype = {
            this.socket.onmessage = function(e){
               $this.log('message received');
               var e = JSON.parse(e.data);
-              var time = new Date();
-              var message = time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds() + ": ";
-              message += 'Light: ' + e.lightOn + ' Luminosity: ' + e.luminosity + '<br />';
-              contentMessage.innerHTML = message + contentMessage.innerHTML;
-              contentMessage.scrollTop = 0;
+              var date = new Date().toTimeString().split(" ")[0]
+
+              if (e.type == "device") {
+                  var message = 'Light: ' + e.device.lightOn + ' Luminosity: ' + e.device.luminosity + '<br />';
+
+                  labels.push(date)
+                  luminosityValues.push(e.device.luminosity)
+                  lightValues.push(e.device.lightOn ? 500 : 0)
+                  chart.update()
+
+                  deviceLog.innerHTML = date + ": " + message + deviceLog.innerHTML;
+                  deviceLog.scrollTop = 0;
+              } else if (e.type == "command") {
+                  var message = 'Command: ' + e.command.fCnt + ' State: ' + e.command.state + '<br />';
+                  commandLog.innerHTML = date + ": " + message + commandLog.innerHTML;
+                  commandLog.scrollTop = 0;
+              }
           };
           this.socket.onclose = function(){
                $this.log('socket closed');
@@ -42,8 +91,6 @@ WebsocketClass.prototype = {
        },
        log: function(m) {
            console.log(m);
-           this.console.innerHTML = m + '<br />' + this.console.innerHTML;
-           contentMessage.scrollTop = 0;
        },
        sendMessage: function(lightStatus){
            var message = '{"light":"' + lightStatus + '"}';

@@ -5,8 +5,10 @@ type Stream struct {
 	LastValue AnyValue `json:"lastValue"`
 }
 
-type Values struct {
-	Values []*Value `json:"values"`
+type Notification struct {
+	DatasourceID string   `json:"datasourceID"`
+	StreamID     string   `json:"streamID"`
+	Values       []*Value `json:"values"`
 }
 
 type Value struct {

@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/brocaar/lorawan"
 	"github.com/marcc-orange/datavenue"
@@ -107,8 +108,8 @@ func handlePush(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Decode JSON payload
-	dvPayload := &datavenue.Values{}
-	if err = json.Unmarshal(buff, dvPayload); err != nil {
+	notification := &datavenue.Notification{}
+	if err = json.Unmarshal(buff, notification); err != nil {
 		w.WriteHeader(400)
 		log.Println(err)
 		log.Println("json:", string(buff))
@@ -116,13 +117,14 @@ func handlePush(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Extract data and fCnt from payload
-	hexData, ok := dvPayload.Values[0].Value.(string)
+	hexData, ok := notification.Values[0].Value.(string)
 	if !ok {
 		w.WriteHeader(400)
 		log.Println("invalid value, ignoring message")
+		log.Println(string(buff))
 		return
 	}
-	fCnt := uint32(dvPayload.Values[0].Metadata["fcnt"].(float64))
+	fCnt := uint32(notification.Values[0].Metadata["fcnt"].(float64))
 	log.Printf("raw: %s fCnt: %d", hexData, fCnt)
 
 	// Decode hex data
@@ -156,8 +158,11 @@ func handlePush(w http.ResponseWriter, r *http.Request) {
 
 	// Send as a notification to all opened websockets
 	notifyAllWebsockets(NotificationMessage{
-		LightOn:    lightOn,
-		Luminosity: luminosity,
+		Type: "device",
+		Device: &DeviceMessage{
+			LightOn:    lightOn,
+			Luminosity: luminosity,
+		},
 	})
 
 	w.WriteHeader(204)
@@ -186,6 +191,62 @@ func panicWrapper(handlerFunc func(w http.ResponseWriter, r *http.Request)) http
 	})
 }
 
+// Called on each command received from client
+func commandHandler(command CommandMessage) {
+	state := "NEW (" + command.Light + ")"
+
+	// Transmit command to Datavenue
+	fCnt, err := sendCommand(command.Light)
+	if err != nil {
+		log.Println("failed to send command: " + err.Error())
+		state = "NEW (failed to transmit)"
+	}
+
+	// Notify all clients a command was initiated
+	notifyAllWebsockets(NotificationMessage{
+		Type: "command",
+		CommandState: &CommandStateMessage{
+			FCnt:  uint16(fCnt),
+			State: state,
+		},
+	})
+}
+
+// Monitor states of each commands, notify clients on updates
+func commandsStatesPolling() {
+
+	cachedStates := map[uint16]string{}
+
+	for {
+		// Poll every 5 sec
+		time.Sleep(5 * time.Second)
+
+		states, err := lpwa.RetrieveCommandsStates(dvClient, *dvDatasource, *dvCommandStream)
+		if err != nil {
+			log.Println("polling commands error: " + err.Error())
+			continue
+		}
+
+		for fCnt, state := range states {
+			if state != cachedStates[fCnt] {
+				cachedStates[fCnt] = state
+
+				log.Printf("command %d: %s", fCnt, state)
+
+				notifyAllWebsockets(NotificationMessage{
+					Type: "command",
+					CommandState: &CommandStateMessage{
+						FCnt:  fCnt,
+						State: state,
+					},
+				})
+			}
+		}
+
+		//TODO Cleanup cache !
+	}
+}
+
 func main() {
 	flag.Parse()
 
@@ -200,9 +261,10 @@ func main() {
 	}
 
 	// Send all commands comming from websockets to Datavanue
-	registerCommandHandler(func(command CommandMessage) {
-		sendCommand(command.Light)
-	})
+	registerCommandHandler(commandHandler)
+
+	// Monitor commands updates
+	go commandsStatesPolling()
 
 	log.Printf("AppSKey: %x", [16]byte(aesKey))
 	log.Printf("DevAddr: %x, %d", [4]byte(devAddr), len(devAddr))

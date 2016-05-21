@@ -16,14 +16,31 @@
 			<p>Demonstration for the Orange LoRa© kit</p>
 		</div>
 
-		<div class="panel panel-primary">
-			<div class="panel-heading">
-				<h3 class="panel-title">Commands (downlink)</h3>
+		<div class="row">
+			<div class="col-md-6">
+
+				<div class="panel panel-primary">
+					<div class="panel-heading">
+						<h3 class="panel-title">Commands</h3>
+					</div>
+					<div class="panel-body text-center">
+						<button id="light-on" class="btn btn-success" disabled="true">Light ON</button>
+						<button id="light-off" class="btn btn-danger" disabled="true">Light OFF</button>
+						<button id="light-blink" class="btn btn-warning" disabled="true">Light BLINK</button>
+					</div>
+				</div>
+
 			</div>
-			<div class="panel-body text-center">
-				<button id="light-on" class="btn btn-success" disabled="true">Light ON</button>
-				<button id="light-off" class="btn btn-danger" disabled="true">Light OFF</button>
-				<button id="light-blink" class="btn btn-warning" disabled="true">Light BLINK</button>
+			<div class="col-md-6">
+
+				<div class="panel panel-primary">
+					<div class="panel-heading">
+						<h3 class="panel-title">Device history</h3>
+					</div>
+					<div class="panel-body text-center">
+						<canvas id="chart" width="100%" height="50px"></canvas>
+					</div>
+				</div>
 
 			</div>
 		</div>
@@ -33,10 +50,10 @@
 
 				<div class="panel panel-primary">
 					<div class="panel-heading">
-						<h3 class="panel-title">Log (uplink)</h3>
+						<h3 class="panel-title">Command log</h3>
 					</div>
 					<div class="panel-body">
-						<div id="echo-content" style="height: 150px; overflow: scroll">
+						<div id="command-log" style="height: 150px; overflow: scroll">
 						</div>
 					</div>
 				</div>
@@ -44,12 +61,13 @@
 			</div>
 			<div class="col-md-6">
 
-				<div class="panel panel-info">
+				<div class="panel panel-primary">
 					<div class="panel-heading">
-						<h3 class="panel-title">Console (websocket)</h3>
+						<h3 class="panel-title">Device log</h3>
 					</div>
 					<div class="panel-body">
-						<div id="console" style="height: 150px; overflow: scroll"/>
+						<div id="device-log" style="height: 150px; overflow: scroll">
+						</div>
 					</div>
 				</div>
 
@@ -61,8 +79,10 @@
 		</footer>
 	</div>
 
-	<script src="script.js"></script>
+
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.3/Chart.min.js" crossorigin="anonymous"></script>
+	<script src="script.js"></script>
 </body>
 </html>
