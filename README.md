@@ -2,6 +2,8 @@
 
 This is an unofficial demo for the Orange LoRa© kit, official demo is hosted there: https://github.com/Orange-OpenSource/lpwa-iot-kit
 
+![Demo](lpwan-demo.png)
+
 ## Server
 
 To run the server, you need a working [Go](http://golang.org) setup.
