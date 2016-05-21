@@ -10,7 +10,8 @@
 
 bool ledState = false;
 
-const long DELAY_LOOP = 180000;
+const long DELAY_LOOP = 180000;  // Delay between two transmissions
+const long DELAY_ACK = 10000;     // Delay for ACK transmission after command
 const int PIN_BUTTON = 7;        // Grove - Button
 const int PIN_LIGHTSENSOR = A5;  // Grove - Temperature Sensor
 const int LEDPIN = 13;           // Onboard LED
@@ -44,16 +45,24 @@ void loop()
   long l_milli = millis();
   while (millis() - l_milli < 6000 && Serial.available() <= 0) { }
 
+  // Time to wait for next transmission
+  int wait = DELAY_LOOP;
+
   // Read downlink data, if any
   while (Serial.available () > 0) {
     ledBlinking(LEDPIN, 2, 200); // blink for 2s when data is available
 
     switch (Serial.read()) {
-      case 0: ledOnOff(false);
+      case 0: 
+        ledOnOff(false);
+        wait = DELAY_ACK; // retransmit ACK now
         break;
-      case 1: ledOnOff(true);
+      case 1: 
+        ledOnOff(true);
+        wait = DELAY_ACK; // retransmit ACK now
         break;
       case 2: ledBlinking(LEDPIN, 5, 500); // blink for 5s
+        wait = DELAY_ACK; // retransmit ACK now
         break;
       case -1: // EOF
         break;
@@ -65,7 +74,7 @@ void loop()
 
   // Wait and check for button press
   l_milli = millis();
-  while (millis() - l_milli < DELAY_LOOP) {
+  while (millis() - l_milli < wait) {
     if (digitalRead(PIN_BUTTON) != 0) {
       ledBlinking(LEDPIN, 4, 500);
       break;
