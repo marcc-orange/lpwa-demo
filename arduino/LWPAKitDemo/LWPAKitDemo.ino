@@ -72,16 +72,19 @@ void loop()
       case 0:
         debug.println("LED: Off");
         ledOnOff(GROVE_LED, false);
+        ledState = false;
         l_wait = DELAY_ACK; // retransmit ACK now
         break;
       case 1: 
         debug.println("LED: On");
         ledOnOff(GROVE_LED, true);
+        ledState = true;
         l_wait = DELAY_ACK; // retransmit ACK now
         break;
       case 2:
         debug.println("LED: Blink");
         ledBlinking(GROVE_LED, 5, 500); // blink for 5s
+        ledOnOff(GROVE_LED, ledState);  // restore previous Grove LED state
         l_wait = DELAY_ACK; // retransmit ACK now
         break;
       case -1: // EOF
@@ -135,10 +138,6 @@ void initXbeeNanoN8()
 void ledOnOff(int led, boolean state)
 {
   digitalWrite(led, state ? HIGH : LOW);
-  // For Grove LED, keep state
-  if (led == GROVE_LED) {
-    ledState = state;
-  }
 }
 
 void ledBlinking(int led, int sec, int period)
@@ -150,10 +149,6 @@ void ledBlinking(int led, int sec, int period)
     delay(period / 2);
     digitalWrite(led, LOW);
     delay(period / 2);
-  }
-  // restore previous Grove LED state
-  if (led == GROVE_LED) {
-    ledOnOff(led, ledState); 
   }
 }
 
