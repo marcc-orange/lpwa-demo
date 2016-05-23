@@ -41,8 +41,10 @@ Point your browser to the root of the server, it should display the demo interfa
 
 ## Using the kit
 
-* Use the provided Seeeduino Stalker v2.3 and Atim LoRa© radio boards.
-* Connect the Grove light sensor and optionnay a Grove button.
+* Use the provided Seeeduino Stalker v2.3 and Atim Nano N8 radio boards.
+* Connect the Grove light sensor to I2C Grove connector.
+* Optionally, add a Grove LED to the D7,8 Grove connector (modify the `LWPAKitDemo` accordingly).
+* Optionally, add a 3,3v USB/UART bridge to Pin 2 (RX) and Pin 3 (TX) for debugging.
 * Flash the Seeduino with the `LWPAKitDemo` sketch from the arduino folder.
 
 The device will send data periodicaly (every 2 min) and respond to commands.
