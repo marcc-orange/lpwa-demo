@@ -7,36 +7,51 @@
 */
 
 #include <math.h>
+#include <SoftwareSerial.h>
 
 bool ledState = false;
 
 const long DELAY_LOOP = 180000;  // Delay between two transmissions
-const long DELAY_ACK = 10000;     // Delay for ACK transmission after command
-const int PIN_BUTTON = 7;        // Grove - Button
-const int PIN_LIGHTSENSOR = A5;  // Grove - Temperature Sensor
-const int LEDPIN = 13;           // Onboard LED
+const long DELAY_ACK  =  10000;  // Delay for ACK transmission after command
+const int GROVE_LIGHT = A5;      // Grove - Light Sensor
+const int GROVE_LED   = 7;       // Grove - LED light (optional, set to 13 if no Grove LED)
+const int ONBOARD_LED = 13;      // Onboard LED
+
+// Debug thought soft serial (optional)
+const int DEBUG_RX = 3;
+const int DEBUG_TX = 2;
+SoftwareSerial debug(DEBUG_RX, DEBUG_TX);
 
 void setup()
 {
-  initXbeeDebugSerials(19200);  // xbee baud rate = 19200 on Atmega side
+  debug.begin(19200);  // baud rate for debug serial
+  Serial.begin(19200); // baud rate for NanoN8
 
-  pinMode(PIN_BUTTON, INPUT); // Set the BUTTON as INPUT
-  pinMode(LEDPIN, OUTPUT);    // Set the LED on Digital 12 as an OUTPUT
+  debug.println("Setup...");
 
-  ledBlinking(LEDPIN, 10, 500);  // Blink for ten seconds
-  ledOnOff(true);       // Led ON along with command mode
+  pinMode(GROVE_LED, OUTPUT);    // Set the Grove LED as output
+  pinMode(ONBOARD_LED, OUTPUT);  // Set the LED on Digital 12 as an OUTPUT
+
+  ledBlinking(ONBOARD_LED, 10, 500);  // Blink for ten seconds
+  ledOnOff(ONBOARD_LED, true);        // Led ON along with command mode
 
   // set ATO & ATM Parameters for Nano N8
   initXbeeNanoN8();
 
-  ledOnOff(false); // Led Off after command mode
-  delay(3000);
+  ledOnOff(ONBOARD_LED, false); // Led Off after command mode
+  
+  debug.println("Setup: DONE");
+
+  delay(1000);
 }
 
 void loop()
 {
   // Read light measure
-  int sensorValue = analogRead(PIN_LIGHTSENSOR); //read light from sensor
+  int sensorValue = analogRead(GROVE_LIGHT);
+  
+  debug.print("Sensor: ");
+  debug.println(sensorValue);
 
   // Send light measure and led state
   sendLightSensorValuetoNanoN8(sensorValue);
@@ -50,61 +65,80 @@ void loop()
 
   // Read downlink data, if any
   while (Serial.available () > 0) {
-    ledBlinking(LEDPIN, 2, 200); // blink for 2s when data is available
+    ledBlinking(ONBOARD_LED, 2, 200); // blink for 2s when data is available
 
-    switch (Serial.read()) {
-      case 0: 
-        ledOnOff(false);
+    int c = Serial.read();
+    switch (c) {
+      case 0:
+        debug.println("LED: Off");
+        ledOnOff(GROVE_LED, false);
         wait = DELAY_ACK; // retransmit ACK now
         break;
       case 1: 
-        ledOnOff(true);
+        debug.println("LED: On");
+        ledOnOff(GROVE_LED, true);
         wait = DELAY_ACK; // retransmit ACK now
         break;
-      case 2: ledBlinking(LEDPIN, 5, 500); // blink for 5s
+      case 2:
+        debug.println("LED: Blink");
+        ledBlinking(GROVE_LED, 5, 500); // blink for 5s
         wait = DELAY_ACK; // retransmit ACK now
         break;
       case -1: // EOF
+        debug.println("EOF");
         break;
       default: // unexpected data
-        ledBlinking(LEDPIN, 4, 100); // blink quickly for 2s
+        debug.print("Unexpected data: ");
+        debug.println(c);
+        ledBlinking(ONBOARD_LED, 4, 100); // blink quickly for 2s
         break;
     }
   }
 
-  // Wait and check for button press
+  // Wait until timeout or low light condition
   l_milli = millis();
   while (millis() - l_milli < wait) {
-    if (digitalRead(PIN_BUTTON) != 0) {
-      ledBlinking(LEDPIN, 4, 500);
+    if (analogRead(GROVE_LIGHT) < 240) {
+      ledBlinking(ONBOARD_LED, 4, 500);
       break;
     }
   }
 }
 
-void initXbeeDebugSerials(int xbee_rate)
+void debugNanoN8(char * message, char * command)
 {
-  Serial.begin(xbee_rate);       // the Bee baud rate on Software Serial Atmega
-  delay(1000);
+  Serial.println(command);
+  debug.print(message);
+  debug.println(Serial.readString());
 }
 
 void initXbeeNanoN8()
 {
   Serial.print("+++");          // Enter command mode
   delay(1500);
-  Serial.print("ATM007=06\n");    // Baud rate 19200
+  Serial.println("ATM007=06");  // Baud rate 19200
   delay(1500);
-  Serial.print("ATQ\n");        // Quit command mode
+  
+  debugNanoN8("Version: ", "ATV");
+  debugNanoN8("AppSKey: ", "ATO083");
+  debugNanoN8("Device address: ", "ATO069");
+  debugNanoN8("Network Session Key: ", "ATO073");
+  debugNanoN8("Application Session Key: ", "ATO074");
+  
+  Serial.println("ATQ");        // Quit command mode
   delay(1500);
 
   // Empty any initial output of the module ?
   while (Serial.read() > 0) { }
 }
 
-void ledOnOff(boolean state)
+void ledOnOff(int led, boolean state)
 {
-  digitalWrite(LEDPIN, state ? HIGH : LOW);
-  ledState = state;
+  digitalWrite(led, state ? HIGH : LOW);
+  // For Grove LED, keep state
+  if (led == GROVE_LED) {
+    ledState = state;
+  }
 }
 
 void ledBlinking(int led, int sec, int period)
@@ -112,12 +146,15 @@ void ledBlinking(int led, int sec, int period)
   long end = millis() + sec * 1000;
   while (millis() < end)
   {
-    digitalWrite(LEDPIN, HIGH);
+    digitalWrite(led, HIGH);
     delay(period / 2);
-    digitalWrite(LEDPIN, LOW);
+    digitalWrite(led, LOW);
     delay(period / 2);
   }
-  ledOnOff(ledState); // restore previous led state
+  // restore previous Grove LED state
+  if (led == GROVE_LED) {
+    ledOnOff(led, ledState); 
+  }
 }
 
 void sendLightSensorValuetoNanoN8(int value)
