@@ -61,7 +61,7 @@ void loop()
   while (millis() - l_milli < 6000 && Serial.available() <= 0) { }
 
   // Time to wait for next transmission
-  int wait = DELAY_LOOP;
+  long l_wait = DELAY_LOOP;
 
   // Read downlink data, if any
   while (Serial.available () > 0) {
@@ -72,17 +72,17 @@ void loop()
       case 0:
         debug.println("LED: Off");
         ledOnOff(GROVE_LED, false);
-        wait = DELAY_ACK; // retransmit ACK now
+        l_wait = DELAY_ACK; // retransmit ACK now
         break;
       case 1: 
         debug.println("LED: On");
         ledOnOff(GROVE_LED, true);
-        wait = DELAY_ACK; // retransmit ACK now
+        l_wait = DELAY_ACK; // retransmit ACK now
         break;
       case 2:
         debug.println("LED: Blink");
         ledBlinking(GROVE_LED, 5, 500); // blink for 5s
-        wait = DELAY_ACK; // retransmit ACK now
+        l_wait = DELAY_ACK; // retransmit ACK now
         break;
       case -1: // EOF
         debug.println("EOF");
@@ -97,7 +97,7 @@ void loop()
 
   // Wait until timeout or low light condition
   l_milli = millis();
-  while (millis() - l_milli < wait) {
+  while (millis() - l_milli < l_wait) {
     if (analogRead(GROVE_LIGHT) < 240) {
       ledBlinking(ONBOARD_LED, 4, 500);
       break;
